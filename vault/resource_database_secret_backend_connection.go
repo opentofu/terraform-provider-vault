@@ -824,6 +824,10 @@ func getDBEngineFromResp(engines []*dbEngine, r *api.Secret) (*dbEngine, error) 
 		return nil, fmt.Errorf(`invalid response data, "plugin_name" is empty`)
 	}
 
+	if pluginName == "vault-plugin-database-oracle" {
+		pluginName = dbEngineOracle.DefaultPluginName()
+	}
+
 	var last int
 	var engine *dbEngine
 	for _, e := range engines {
@@ -1655,16 +1659,15 @@ func validateDBPluginName(s string) error {
 
 	// temporary workaround to allow for specifiying vault-plugin-database-oracle
 	// when configuring oracle provider on HCP Vault
-	if strings.EqualFold(s, dbEngineOracle.DefaultPluginName()) {
-		for _, v := range hcpWhiteListedPluginNames {
-			if strings.EqualFold(s, v) {
-				return nil
-			}
+	for _, v := range hcpWhiteListedPluginNames {
+		if strings.EqualFold(s, v) {
+			return nil
 		}
 	}
 
+	prefixes := append(pluginPrefixes, hcpWhiteListedPluginNames...)
 	return fmt.Errorf("unsupported database plugin name %q, must begin with one of: %s", s,
-		strings.Join(pluginPrefixes, ", "))
+		strings.Join(prefixes, ","))
 }
 
 func getSortedPluginPrefixes() ([]string, error) {
