@@ -132,6 +132,7 @@ var (
 		dbEngineRedisElastiCache,
 		dbEngineRedshift,
 	}
+	hcpWhiteListedPluginNames = []string{"vault-plugin-database-oracle"}
 )
 
 type dbEngine struct {
@@ -1649,6 +1650,16 @@ func validateDBPluginName(s string) error {
 	for _, v := range pluginPrefixes {
 		if strings.HasPrefix(s, v) {
 			return nil
+		}
+	}
+
+	// temporary workaround to allow for specifiying vault-plugin-database-oracle
+	// when configuring oracle provider on HCP Vault
+	if strings.EqualFold(s, dbEngineOracle.DefaultPluginName()) {
+		for _, v := range hcpWhiteListedPluginNames {
+			if strings.EqualFold(s, v) {
+				return nil
+			}
 		}
 	}
 
