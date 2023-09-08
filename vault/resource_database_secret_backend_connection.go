@@ -132,7 +132,15 @@ var (
 		dbEngineRedisElastiCache,
 		dbEngineRedshift,
 	}
-	hcpWhiteListedPluginNames = []string{"vault-plugin-database-oracle"}
+	hcpWhiteListedPluginNames = []struct {
+		HCPPluginName             string
+		DBEngineDefaultPluginName string
+	}{
+		{
+			"vault-plugin-database-oracle",
+			dbEngineOracle.DefaultPluginName(),
+		},
+	}
 )
 
 type dbEngine struct {
@@ -824,8 +832,11 @@ func getDBEngineFromResp(engines []*dbEngine, r *api.Secret) (*dbEngine, error) 
 		return nil, fmt.Errorf(`invalid response data, "plugin_name" is empty`)
 	}
 
-	if pluginName == "vault-plugin-database-oracle" {
-		pluginName = dbEngineOracle.DefaultPluginName()
+	for _, v := range hcpWhiteListedPluginNames {
+		if pluginName == v.HCPPluginName {
+			pluginName = v.DBEngineDefaultPluginName
+			break
+		}
 	}
 
 	var last int
@@ -1660,12 +1671,17 @@ func validateDBPluginName(s string) error {
 	// temporary workaround to allow for specifiying vault-plugin-database-oracle
 	// when configuring oracle provider on HCP Vault
 	for _, v := range hcpWhiteListedPluginNames {
-		if strings.EqualFold(s, v) {
+		if strings.EqualFold(s, v.HCPPluginName) {
 			return nil
 		}
 	}
 
-	prefixes := append(pluginPrefixes, hcpWhiteListedPluginNames...)
+	prefixes := []string{}
+	prefixes = append(prefixes, pluginPrefixes...)
+	for _, v := range hcpWhiteListedPluginNames {
+		prefixes = append(prefixes, v.HCPPluginName)
+	}
+
 	return fmt.Errorf("unsupported database plugin name %q, must begin with one of: %s", s,
 		strings.Join(prefixes, ","))
 }
