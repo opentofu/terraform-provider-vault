@@ -2,6 +2,7 @@
 IMPROVEMENTS:
 * Update dependencies ([#1958](https://github.com/hashicorp/terraform-provider-vault/pull/1958))
   * github.com/hashicorp/go-secure-stdlib/awsutil `v0.1.6` -> `v0.2.3`
+* Ensure sensitive values are masked in `vault_approle_auth_backend_login` plan output ([#2008](https://github.com/hashicorp/terraform-provider-vault/pull/2008))
 
 ## 3.20.0 (Aug 30, 2023)
 FEATURES:
